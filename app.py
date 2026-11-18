@@ -139,6 +139,20 @@ def api_dados_post():
     if not isinstance(alunos, list):
         return jsonify({"erro": "Payload deve conter uma lista 'alunos'."}), 400
     try:
+        # Preserva a foto ja salva quando o payload chega sem ela
+        # (o navegador pode enviar dados antigos do localStorage).
+        if DADOS_JSON.exists():
+            fotos_existentes = {}
+            for a in carregar_json(DADOS_JSON):
+                if isinstance(a, dict) and a.get("foto"):
+                    chave = str(a.get("prontuario") or a.get("nome") or "").upper()
+                    if chave:
+                        fotos_existentes[chave] = a["foto"]
+            for novo in alunos:
+                if isinstance(novo, dict) and not novo.get("foto"):
+                    chave = str(novo.get("prontuario") or novo.get("nome") or "").upper()
+                    if chave in fotos_existentes:
+                        novo["foto"] = fotos_existentes[chave]
         salvar_json(alunos)
     except Exception as e:
         return jsonify({"erro": f"Falha ao salvar JSON: {e}"}), 500
