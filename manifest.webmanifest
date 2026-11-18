@@ -1,0 +1,14 @@
+{
+  "name": "Conselho de Classe IFSP - Boletins",
+  "short_name": "Conselho IFSP",
+  "description": "Dashboard de boletins, NAPNE e deliberações do conselho de classe.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#f4f6f9",
+  "theme_color": "#0d6efd",
+  "icons": [
+    { "src": "/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }
+  ]
+}

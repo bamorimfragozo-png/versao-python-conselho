@@ -1,0 +1,753 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#0d6efd">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <link rel="manifest" href="/manifest.webmanifest">
+    <title>Conselho de Classe IFSP - Ficha Individual</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body { background-color: #f4f6f9; font-family: 'Segoe UI', system-ui, sans-serif; font-size: 0.9rem; position: relative; }
+        .card-custom { border: none; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.04); background: white; }
+        .sparkline-container { width: 130px; height: 45px; }
+        .napne-box { background-color: #fff8e1; border-left: 4px solid #ffa000; }
+        .table-sm td, .table-sm th { vertical-align: middle; padding: 0.6rem 0.5rem; }
+
+        /* Estilos de alerta de notas */
+        .nota-vermelha { color: #dc3545; font-weight: bold; }
+        .nota-laranja { color: #fd7e14; font-weight: bold; }
+        .nota-verde { color: #198754; font-weight: bold; }
+
+        /* Botões Laterais */
+        .nav-btn-side {
+            position: fixed; top: 0; bottom: 0; width: 32px;
+            background-color: rgba(33, 37, 41, 0.08); color: #495057; border: none;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.4rem; cursor: pointer; transition: all 0.2s ease-in-out; z-index: 1000;
+        }
+        .nav-btn-side:hover { background-color: rgba(13, 110, 253, 0.85); color: white; width: 38px; }
+        .nav-btn-left { left: 0; border-top-right-radius: 8px; border-bottom-right-radius: 8px; }
+        .nav-btn-right { right: 0; border-top-left-radius: 8px; border-bottom-left-radius: 8px; }
+        .container-wrapper { margin-left: 28px; margin-right: 28px; }
+        .foto-aluno { width: 72px; height: 96px; object-fit: cover; border-radius: 8px; border: 2px solid #dee2e6; background: #f1f3f5; flex-shrink: 0; }
+        .foto-aluno-vazia { display: flex; align-items: center; justify-content: center; color: #adb5bd; font-size: 2.6rem; }
+        
+        /* Estilo para o painel de checkboxes do gráfico */
+        .bimestre-check { cursor: pointer; transform: scale(1.1); }
+        .bimestre-check-label { cursor: pointer; user-select: none; }
+    </style>
+</head>
+<body class="p-3">
+
+    <button class="nav-btn-side nav-btn-left" onclick="navegarAluno(-1)" title="Aluno Anterior">
+        <i class="bi bi-chevron-left"></i>
+    </button>
+    <button class="nav-btn-side nav-btn-right" onclick="navegarAluno(1)" title="Próximo Aluno">
+        <i class="bi bi-chevron-right"></i>
+    </button>
+
+    <div class="container-wrapper">
+        <div class="card card-custom p-3 mb-3">
+            <div class="d-flex flex-wrap align-items-end justify-content-between gap-2">
+                <div>
+                    <h6 class="fw-bold text-secondary mb-1"><i class="bi bi-file-earmark-pdf me-1"></i>Atualizar dados dos boletins</h6>
+                    <small class="text-muted">Envie um ou mais PDFs de boletins. O PDF de apontamentos NAPNE é opcional.</small>
+                </div>
+                <form id="formUploadPdf" class="d-flex flex-wrap align-items-center gap-2">
+                    <input class="form-control form-control-sm" style="width: 150px;" id="inputTurmaUpload" placeholder="Automático (lê do PDF)" title="Opcional: deixe vazio para ler a turma do PDF">
+                    <input class="form-control form-control-sm" style="width: 240px;" type="file" id="inputPdfBoletins" name="pdfs" accept="application/pdf,.pdf" multiple required>
+                    <input class="form-control form-control-sm" style="width: 240px;" type="file" id="inputPdfNapne" name="napne" accept="application/pdf,.pdf" title="PDF do NAPNE (opcional)">
+                    <label class="small text-nowrap mb-0" title="Se marcado, substitui os alunos atuais em vez de mesclar">
+                        <input type="checkbox" id="checkSubstituirDados"> Substituir dados
+                    </label>
+                    <button class="btn btn-sm btn-primary fw-semibold" type="submit" id="btnProcessarPdf">
+                        <i class="bi bi-gear me-1"></i>Processar PDFs
+                    </button>
+                    <a class="btn btn-sm btn-outline-secondary" href="/integracao">Integração PDF</a>
+                    <a class="btn btn-sm btn-outline-secondary" href="/dashboards">Todos os dashboards</a>
+                </form>
+            </div>
+            <div class="small mt-2 text-muted" id="txtStatusUpload">Nenhum PDF processado nesta sessão.</div>
+        </div>
+
+        <div class="card card-custom p-3 mb-3">
+            <div class="row align-items-center g-3">
+                <div class="col-md-4">
+                    <label for="selectAluno" class="form-label fw-bold text-secondary mb-1">
+                        <i class="bi bi-person-bounding-box me-1"></i> Selecionar Aluno (Conselho de Classe):
+                    </label>
+                    <select id="selectAluno" class="form-select form-select-sm fw-bold" onchange="carregarDadosAluno()">
+                    </select>
+                </div>
+                <div class="col-md-5">
+                    <div class="d-flex align-items-center gap-3">
+                        <img id="imgFotoAluno" class="foto-aluno d-none" alt="Foto do aluno">
+                        <div id="fotoPlaceholder" class="foto-aluno foto-aluno-vazia" title="Sem foto no JSON"><i class="bi bi-person-fill"></i></div>
+                        <div>
+                            <h5 class="fw-bold mb-0 text-dark" id="txtNomeAluno">---</h5>
+                            <small class="text-muted">Prontuário: <span id="txtProntuario" class="fw-semibold">---</span> | Curso: <span id="txtCurso" class="fw-semibold">---</span> | Turma: <span id="txtTurma" class="fw-semibold">---</span></small>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3 text-end">
+                    <button class="btn btn-sm btn-outline-primary fw-semibold mb-1" onclick="carregarDadosServidor()" title="Recarregar dados salvos no servidor">
+                        <i class="bi bi-arrow-clockwise me-1"></i> Atualizar dados
+                    </button>
+                    <button class="btn btn-sm btn-outline-dark fw-semibold mb-1" onclick="toggleTelaCheia()" title="Abrir em tela cheia">
+                        <i class="bi bi-fullscreen me-1"></i> Tela cheia
+                    </button>
+                    <div class="small text-muted" id="txtStatusArquivo">Carregando dados do servidor...</div>
+                    <div class="small mb-1 text-muted" id="txtStatusSalvamento">Alterações serão salvas em dados_alunos.json.</div>
+                    <button id="btnBaixarJson" class="btn btn-sm btn-success fw-semibold mb-1 d-none" onclick="baixarJson()">
+                        <i class="bi bi-download me-1"></i> Baixar JSON atualizado
+                    </button>
+                    <span id="badgeStatusGeral" class="badge p-2 fs-6">---</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="row g-3 mb-3">
+            <div class="col-md-3">
+                <div class="card card-custom p-2 text-center border-start border-4 border-primary">
+                    <small class="text-muted fw-bold">MÉDIA GERAL (Selecionados)</small>
+                    <h3 class="fw-bold mb-0" id="kpiMediaGeral">0.0</h3>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card card-custom p-2 text-center border-start border-4 border-info">
+                    <small class="text-muted fw-bold">FREQUÊNCIA GLOBAL</small>
+                    <h3 class="fw-bold mb-0" id="kpiFrequencia">0%</h3>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card card-custom p-2 text-center border-start border-4 border-danger">
+                    <small class="text-muted fw-bold">DISCIPLINAS RETIDAS (&lt; 6.0)</small>
+                    <h3 class="fw-bold mb-0 text-danger" id="kpiRetencoes">0</h3>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card card-custom p-2 text-center border-start border-4 border-warning">
+                    <small class="text-muted fw-bold">ACOMPANHAMENTO NAPNE</small>
+                    <h3 class="fw-bold mb-0 text-warning" id="kpiNapneStatus">NÃO</h3>
+                </div>
+            </div>
+        </div>
+
+        <div class="row g-3 mb-3">
+            <div class="col-md-8">
+                <div class="card card-custom p-3 h-100">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <h6 class="fw-bold text-secondary mb-0">
+                            <i class="bi bi-sort-numeric-down me-1"></i> Desempenho por Disciplina (<span id="txtQtdDisciplinas">0</span> Disciplinas)
+                        </h6>
+                        <small class="text-muted">*Média calculada com base nos bimestres selecionados ao lado.</small>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table table-sm table-hover align-middle mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Disciplina</th>
+                                    <th class="text-center">B1</th>
+                                    <th class="text-center">B2</th>
+                                    <th class="text-center">B3</th>
+                                    <th class="text-center">B4</th>
+                                    <th class="text-center">Média</th>
+                                    <th class="text-center">Falta(s)</th>
+                                    <th class="text-center">Evolução Bimestral</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tbodyDisciplinasCriticas">
+                                <!-- Preenchido via JS (Médias < 6.0) -->
+                            </tbody>
+                            <tbody id="tbodyDisciplinasAprovadas" style="display: none;">
+                                <!-- Preenchido via JS (Médias >= 6.0) -->
+                            </tbody>
+                        </table>
+                        <div class="p-2 text-center bg-light border-top">
+                            <button id="btnToggleAprovadas" class="btn btn-sm btn-outline-secondary fw-semibold" onclick="toggleAprovadas()">
+                                <i class="bi bi-plus-circle me-1"></i> Exibir Disciplinas Aprovadas (<span id="countAprovadas">0</span>)
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-4">
+                <div class="card card-custom p-3 h-100">
+                    <!-- NOVO PAINEL DE CHECKBOXES HORIZONTAL -->
+                    <div class="mb-3 p-3 bg-light rounded border">
+                        <small class="fw-bold text-secondary d-block mb-2 text-center">Bimestres para cálculo da Média Geral:</small>
+                        <div class="d-flex justify-content-around">
+                            <div class="form-check form-check-inline">
+                                <input class="form-check-input bimestre-check" type="checkbox" id="checkB1" value="b1" checked onchange="atualizarDashboard()">
+                                <label class="form-check-label fw-semibold bimestre-check-label" for="checkB1">1º Bim</label>
+                            </div>
+                            <div class="form-check form-check-inline">
+                                <input class="form-check-input bimestre-check" type="checkbox" id="checkB2" value="b2" checked onchange="atualizarDashboard()">
+                                <label class="form-check-label fw-semibold bimestre-check-label" for="checkB2">2º Bim</label>
+                            </div>
+                            <div class="form-check form-check-inline">
+                                <input class="form-check-input bimestre-check" type="checkbox" id="checkB3" value="b3" checked onchange="atualizarDashboard()">
+                                <label class="form-check-label fw-semibold bimestre-check-label" for="checkB3">3º Bim</label>
+                            </div>
+                            <div class="form-check form-check-inline">
+                                <input class="form-check-input bimestre-check" type="checkbox" id="checkB4" value="b4" checked onchange="atualizarDashboard()">
+                                <label class="form-check-label fw-semibold bimestre-check-label" for="checkB4">4º Bim</label>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- FIM DO NOVO PAINEL -->
+
+                    <h6 class="fw-bold text-secondary mb-2">Evolução da Média Geral (Barras + Linhas)</h6>
+                    <canvas id="chartEvolucaoGeral" height="220"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <div class="card card-custom p-3 napne-box">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+                <h6 class="fw-bold text-dark mb-0">
+                    <i class="bi bi-journal-medical me-1 text-warning"></i> Parecer do NAPNE &amp; Observações Pedagógicas
+                </h6>
+                <span class="badge bg-warning text-dark" id="badgePNE">Atendimento Especializado</span>
+            </div>
+
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <label class="fw-bold text-muted small">Anotações / Adaptações Curriculares (NAPNE):</label>
+                    <textarea class="form-control form-control-sm mb-2" id="txtNotasNapne" rows="3" placeholder="Nenhum registro encontrado." onchange="salvarNotasNapne()"></textarea>
+                    <div class="input-group input-group-sm mb-2">
+                        <input type="text" id="inputNovaAcaoNapne" class="form-control" placeholder="Adicionar nova ação pedagógica/NAPNE...">
+                        <button class="btn btn-warning fw-bold text-dark" onclick="salvarAcaoNapne()">
+                            <i class="bi bi-plus-circle me-1"></i> Salvar e Adicionar Ação
+                        </button>
+                    </div>
+                    <small class="fw-bold text-muted">Histórico de Ações Registradas:</small>
+                    <ul class="list-group list-group-flush bg-white rounded border p-1" id="listaAcoesNapne" style="max-height: 100px; overflow-y: auto;">
+                    </ul>
+                </div>
+
+                <div class="col-md-6">
+                    <label class="fw-bold text-muted small">Encaminhamento / Deliberação do Conselho de Classe:</label>
+                    <textarea class="form-control form-control-sm mb-2" id="txtDeliberacaoConselho" rows="4" placeholder="Digite as deliberações do conselho..." onchange="salvarDeliberacaoConselho()"></textarea>
+                    <div class="text-end">
+                        <button class="btn btn-sm btn-primary" onclick="salvarDeliberacaoConselho()">
+                            <i class="bi bi-save me-1"></i> Salvar Deliberação
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let bancoAlunos = [];
+
+        let sparklinesCharts = [];
+        let chartEvolucaoGeralInstance = null;
+
+        function esc(t) {
+            return String(t ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+        }
+
+        function inicializar() {
+            const select = document.getElementById('selectAluno');
+            select.innerHTML = '';
+            bancoAlunos.forEach((aluno, index) => {
+                const opt = document.createElement('option');
+                opt.value = index;
+                const chamada = aluno.num_chamada != null ? `${String(aluno.num_chamada).padStart(2, '0')} - ` : '';
+                opt.textContent = `${chamada}${aluno.nome} (${aluno.prontuario})`;
+                select.appendChild(opt);
+            });
+            carregarDadosAluno();
+        }
+
+        function paraNota(v) {
+            if (v === null || v === undefined || v === '') return null;
+            const n = typeof v === 'string' ? parseFloat(v.replace(',', '.')) : Number(v);
+            return Number.isFinite(n) ? n : null;
+        }
+
+        function fotoValida(f) {
+            return typeof f === 'string' && /^data:image\/(jpeg|jpg|png|gif|webp);base64,[A-Za-z0-9+\/=]+$/.test(f) ? f : null;
+        }
+
+        function normalizarAluno(a, i) {
+            const disc = Array.isArray(a.disciplinas) ? a.disciplinas : [];
+            return {
+                ...a,
+                num_chamada: a.num_chamada ?? (i + 1),
+                prontuario: a.prontuario ?? '---',
+                nome: a.nome ?? 'Aluno sem nome',
+                curso: a.curso ?? '---',
+                turma: a.turma ?? '---',
+                frequencia: paraNota(a.frequencia),
+                napne: !!a.napne,
+                pneInfo: a.pneInfo ?? '',
+                acoesNapne: Array.isArray(a.acoesNapne) ? a.acoesNapne.map(String) : [],
+                deliberacao: a.deliberacao ?? '',
+                foto: fotoValida(a.foto),
+                disciplinas: disc.map(d => ({
+                    ...d,
+                    nome: d.nome ?? 'Disciplina',
+                    b1: paraNota(d.b1), b2: paraNota(d.b2), b3: paraNota(d.b3), b4: paraNota(d.b4),
+                    faltas: paraNota(d.faltas) ?? 0
+                }))
+            };
+        }
+
+        let nomeArquivo = 'dados_alunos.json';
+        let filaSalvamento = Promise.resolve();
+        const CHAVE_STORAGE = 'versao_python_dados';
+        function cacheLocalSalvar() {
+            try { localStorage.setItem(CHAVE_STORAGE, JSON.stringify({ arquivo: nomeArquivo, alunos: bancoAlunos })); } catch (e) {}
+        }
+        function cacheLocalCarregar() {
+            try {
+                const raw = localStorage.getItem(CHAVE_STORAGE);
+                if (!raw) return null;
+                const d = JSON.parse(raw);
+                return Array.isArray(d.alunos) ? d : (Array.isArray(d) ? { alunos: d } : null);
+            } catch (e) { return null; }
+        }
+
+        function setStatusSalvamento(tipo, texto) {
+            const el = document.getElementById('txtStatusSalvamento');
+            el.textContent = texto;
+            el.className = 'small mb-1 ' + ({ ok: 'text-success', erro: 'text-danger', aviso: 'text-warning-emphasis' }[tipo] || 'text-muted');
+        }
+
+        function processarJson(dados, nome) {
+            if (!Array.isArray(dados)) dados = Array.isArray(dados && dados.alunos) ? dados.alunos : [dados];
+            if (!dados.length) throw new Error('O JSON não contém nenhum aluno.');
+            if (dados.some(a => a === null || typeof a !== 'object')) throw new Error('Formato inválido: cada item deve ser um objeto de aluno.');
+
+            bancoAlunos = dados.map(normalizarAluno)
+                .sort((a, b) => (a.num_chamada ?? 0) - (b.num_chamada ?? 0));
+            nomeArquivo = nome || 'dados_alunos.json';
+            cacheLocalSalvar();
+            document.getElementById('btnBaixarJson').classList.add('d-none');
+            document.getElementById('txtStatusArquivo').textContent = `${nomeArquivo} — ${bancoAlunos.length} aluno(s)`;
+            inicializar();
+        }
+
+        async function carregarDadosServidor() {
+            const status = document.getElementById('txtStatusArquivo');
+            status.textContent = 'Carregando dados do servidor...';
+            try {
+                const resposta = await fetch('/api/dados');
+                const dados = await resposta.json();
+                if (!resposta.ok) throw new Error(dados.erro || 'Falha ao carregar dados.');
+                processarJson(dados.alunos || dados, dados.arquivo || nomeArquivo);
+                setStatusSalvamento('ok', 'Dados carregados do servidor.');
+            } catch (erro) {
+                const cache = cacheLocalCarregar();
+                if (cache && cache.alunos && cache.alunos.length) {
+                    processarJson(cache.alunos, cache.arquivo || nomeArquivo);
+                    status.textContent += ' (cache local do navegador)';
+                    setStatusSalvamento('aviso', 'Servidor indisponível — exibindo dados salvos neste navegador.');
+                } else if (window.location.protocol === 'file:') {
+                    status.textContent = 'Abra pelo servidor: / (não abra o HTML como arquivo).';
+                    setStatusSalvamento('erro', 'Use /');
+                } else {
+                    status.textContent = 'Erro ao carregar dados: ' + erro.message;
+                    setStatusSalvamento('erro', erro.message);
+                }
+            }
+        }
+
+        function persistirAlteracoes() {
+            setStatusSalvamento('aviso', 'Salvando alterações no servidor...');
+            filaSalvamento = filaSalvamento.then(async () => {
+                try {
+                    const resposta = await fetch('/api/dados', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ alunos: bancoAlunos })
+                    });
+                    const dados = await resposta.json();
+                    if (!resposta.ok) throw new Error(dados.erro || 'Falha ao salvar.');
+                    cacheLocalSalvar();
+                    setStatusSalvamento('ok', 'Salvo no servidor às ' + new Date().toLocaleTimeString('pt-BR') + '.');
+                } catch (erro) {
+                    setStatusSalvamento('aviso', 'Salvo apenas no cache local: ' + erro.message);
+                }
+            });
+        }
+
+        function baixarJson() {
+            const blob = new Blob([JSON.stringify(bancoAlunos, null, 4)], { type: 'application/json' });
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = nomeArquivo || 'dados.json';
+            a.click();
+            URL.revokeObjectURL(a.href);
+            document.getElementById('btnBaixarJson').classList.add('d-none');
+            setStatusSalvamento('ok', 'JSON atualizado baixado às ' + new Date().toLocaleTimeString('pt-BR') + '.');
+        }
+
+        async function processarPdfs(event) {
+            event.preventDefault();
+            const status = document.getElementById('txtStatusUpload');
+            const botao = document.getElementById('btnProcessarPdf');
+            const inputBoletins = document.getElementById('inputPdfBoletins');
+            const inputNapne = document.getElementById('inputPdfNapne');
+            const turma = document.getElementById('inputTurmaUpload').value.trim();
+
+            if (!inputBoletins.files.length) {
+                status.textContent = 'Selecione ao menos um PDF de boletim.';
+                return;
+            }
+
+            const formData = new FormData();
+            if (turma) formData.append('turma', turma);
+            Array.from(inputBoletins.files).forEach(f => formData.append('pdfs', f));
+            if (inputNapne.files.length) formData.append('napne', inputNapne.files[0]);
+            if (document.getElementById('checkSubstituirDados').checked) formData.append('substituir', '1');
+
+            botao.disabled = true;
+            status.textContent = 'Processando PDFs no servidor...';
+            try {
+                const resposta = await fetch('/api/processar-pdfs', { method: 'POST', body: formData });
+                const dados = await resposta.json();
+                if (!resposta.ok) throw new Error(dados.erro || 'Falha ao processar PDFs.');
+                processarJson(dados.alunos, dados.arquivo || nomeArquivo);
+                status.textContent = `Processado: ${dados.alunos.length} aluno(s) extraídos e salvos em ${dados.arquivo}.`;
+            } catch (erro) {
+                status.textContent = 'Erro ao processar PDFs: ' + erro.message;
+            } finally {
+                botao.disabled = false;
+            }
+        }
+
+        function navegarAluno(direcao) {
+            const select = document.getElementById('selectAluno');
+            let total = select.options.length;
+            if (total === 0) return;
+            let atual = parseInt(select.value);
+            let novoIndex = (atual + direcao + total) % total;
+            select.value = novoIndex;
+            carregarDadosAluno();
+        }
+
+        function obterClasseNota(valor) {
+            if (valor === null || valor === undefined) return '';
+            if (valor < 4.0) return 'nota-vermelha';
+            if (valor < 6.0) return 'nota-laranja';
+            return 'nota-verde';
+        }
+
+        function formatarNota(valor) {
+            return (valor !== null && valor !== undefined) ? valor.toFixed(1) : '-';
+        }
+
+        // --- FUNÇÃO: Obtém quais bimestres estão marcados nos checkboxes ---
+        function getBimestresSelecionados() {
+            const checkboxes = document.querySelectorAll('.bimestre-check:checked');
+            return Array.from(checkboxes).map(cb => cb.value); // ex: ['b1', 'b2', 'b4']
+        }
+
+        function carregarDadosAluno() {
+            const index = document.getElementById('selectAluno').value;
+            const aluno = bancoAlunos[index];
+
+            document.getElementById('txtNomeAluno').innerText = aluno.nome;
+            document.getElementById('txtProntuario').innerText = aluno.prontuario;
+            document.getElementById('txtCurso').innerText = aluno.curso;
+            document.getElementById('txtTurma').innerText = aluno.turma;
+            document.getElementById('txtQtdDisciplinas').innerText = aluno.disciplinas.length;
+            document.getElementById('kpiNapneStatus').innerText = aluno.napne ? "SIM" : "NÃO";
+
+            const imgFoto = document.getElementById('imgFotoAluno');
+            const fotoVazia = document.getElementById('fotoPlaceholder');
+            const fotoOk = fotoValida(aluno.foto);
+            if (fotoOk) imgFoto.src = fotoOk; else imgFoto.removeAttribute('src');
+            imgFoto.alt = 'Foto de ' + aluno.nome;
+            imgFoto.classList.toggle('d-none', !fotoOk);
+            fotoVazia.classList.toggle('d-none', !!fotoOk);
+
+            document.getElementById('txtNotasNapne').value = aluno.pneInfo || '';
+            document.getElementById('txtDeliberacaoConselho').value = aluno.deliberacao || '';
+            document.getElementById('inputNovaAcaoNapne').value = '';
+            
+            renderListaAcoesNapne(aluno.acoesNapne);
+            
+            // Chama a função centralizada de cálculo e renderização
+            atualizarDashboard();
+        }
+
+        // --- FUNÇÃO: Recalcula tudo com base nos checkboxes do painel ---
+        function atualizarDashboard() {
+            const index = document.getElementById('selectAluno').value;
+            const aluno = bancoAlunos[index];
+            const bimestresSelecionados = getBimestresSelecionados();
+
+            // 1. Processar disciplinas com base APENAS nos bimestres selecionados para a MÉDIA
+            const disciplinasProcessadas = aluno.disciplinas.map(d => {
+                const notasValidas = bimestresSelecionados
+                    .map(b => d[b])
+                    .filter(n => n !== null && n !== undefined);
+                
+                const media = notasValidas.length > 0 
+                    ? (notasValidas.reduce((a, b) => a + b, 0) / notasValidas.length) 
+                    : null;
+                
+                return { ...d, media: media };
+            }).sort((a, b) => {
+                if (a.media === null) return 1;
+                if (b.media === null) return -1;
+                return a.media - b.media;
+            });
+
+            // 2. Calcular Média Geral (KPI) e Retenções
+            const mediasValidas = disciplinasProcessadas.map(d => d.media).filter(m => m !== null);
+            const mediaGeral = mediasValidas.length > 0 
+                ? mediasValidas.reduce((a, b) => a + b, 0) / mediasValidas.length 
+                : null;
+
+            const retencoes = disciplinasProcessadas.filter(d => d.media !== null && d.media < 6.0).length;
+            const freqBaixa = aluno.frequencia !== null && aluno.frequencia < 75.0;
+
+            // 3. Atualizar KPIs no DOM
+            document.getElementById('kpiMediaGeral').innerText = formatarNota(mediaGeral);
+            document.getElementById('kpiMediaGeral').className = `fw-bold mb-0 ${obterClasseNota(mediaGeral)}`;
+            
+            document.getElementById('kpiFrequencia').innerText = aluno.frequencia !== null ? aluno.frequencia.toFixed(1) + '%' : '-';
+            document.getElementById('kpiFrequencia').className = `fw-bold mb-0 ${freqBaixa ? 'text-danger' : 'text-info'}`;
+            
+            document.getElementById('kpiRetencoes').innerText = retencoes;
+
+            const badgeStatus = document.getElementById('badgeStatusGeral');
+            if (retencoes > 3 || freqBaixa) {
+                badgeStatus.innerText = "SITUAÇÃO CRÍTICA";
+                badgeStatus.className = "badge bg-danger p-2 fs-6";
+            } else if (retencoes > 0) {
+                badgeStatus.innerText = "EM ATENÇÃO";
+                badgeStatus.className = "badge bg-warning text-dark p-2 fs-6";
+            } else {
+                badgeStatus.innerText = "PROMOVIDO / SATISFATÓRIO";
+                badgeStatus.className = "badge bg-success p-2 fs-6";
+            }
+
+            // 4. Renderizar Tabela e Gráfico
+            renderTabelaDisciplinas(disciplinasProcessadas);
+            renderGraficoEvolucaoGeral(disciplinasProcessadas, bimestresSelecionados);
+        }
+
+        function renderTabelaDisciplinas(disciplinas) {
+            sparklinesCharts.forEach(chart => chart.destroy());
+            sparklinesCharts = [];
+
+            const tbodyCriticas = document.getElementById('tbodyDisciplinasCriticas');
+            const tbodyAprovadas = document.getElementById('tbodyDisciplinasAprovadas');
+            
+            tbodyCriticas.innerHTML = '';
+            tbodyAprovadas.innerHTML = '';
+            tbodyAprovadas.style.display = 'none';
+            document.getElementById('btnToggleAprovadas').innerHTML =
+                `<i class="bi bi-plus-circle me-1"></i> Exibir Disciplinas Aprovadas (<span id="countAprovadas">0</span>)`;
+
+            let aprovadasCount = 0;
+
+            disciplinas.forEach((d, i) => {
+                const classeMedia = obterClasseNota(d.media);
+                const canvasId = `sparkline_${i}`;
+
+                // A tabela SEMPRE exibe as 4 colunas de bimestres (B1, B2, B3, B4)
+                const row = `
+                    <tr>
+                        <td class="fw-semibold">${esc(d.nome)}</td>
+                        <td class="text-center ${obterClasseNota(d.b1)}">${formatarNota(d.b1)}</td>
+                        <td class="text-center ${obterClasseNota(d.b2)}">${formatarNota(d.b2)}</td>
+                        <td class="text-center ${obterClasseNota(d.b3)}">${formatarNota(d.b3)}</td>
+                        <td class="text-center ${obterClasseNota(d.b4)}">${formatarNota(d.b4)}</td>
+                        <td class="text-center ${classeMedia}">${formatarNota(d.media)}</td>
+                        <td class="text-center">${d.faltas}</td>
+                        <td class="text-center">
+                            <div class="sparkline-container mx-auto">
+                                <canvas id="${canvasId}"></canvas>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+
+                if (d.media !== null && d.media >= 6.0) {
+                    tbodyAprovadas.innerHTML += row;
+                    aprovadasCount++;
+                } else {
+                    tbodyCriticas.innerHTML += row;
+                }
+            });
+
+            document.getElementById('countAprovadas').innerText = aprovadasCount;
+
+            setTimeout(() => {
+                disciplinas.forEach((d, i) => {
+                    const canvas = document.getElementById(`sparkline_${i}`);
+                    if (!canvas) return;
+                    
+                    const ctx = canvas.getContext('2d');
+                    let corLinha = '#198754';
+                    if (d.media !== null && d.media < 4.0) corLinha = '#dc3545';
+                    else if (d.media !== null && d.media < 6.0) corLinha = '#fd7e14';
+
+                    const chart = new Chart(ctx, {
+                        type: 'line',
+                        data: {
+                            labels: ['B1', 'B2', 'B3', 'B4'], // Sparkline sempre mostra a evolução completa das 4 notas
+                            datasets: [{
+                                data: [d.b1, d.b2, d.b3, d.b4],
+                                borderColor: corLinha,
+                                borderWidth: 2,
+                                pointRadius: 3,
+                                pointBackgroundColor: corLinha,
+                                fill: false,
+                                spanGaps: true
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: { legend: { display: false } },
+                            scales: { x: { display: false }, y: { display: false, min: 0, max: 10 } }
+                        }
+                    });
+                    sparklinesCharts.push(chart);
+                });
+            }, 50);
+        }
+
+        function toggleAprovadas() {
+            const tbodyAprovadas = document.getElementById('tbodyDisciplinasAprovadas');
+            const btn = document.getElementById('btnToggleAprovadas');
+            
+            if (tbodyAprovadas.style.display === 'none') {
+                tbodyAprovadas.style.display = 'table-row-group';
+                btn.innerHTML = `<i class="bi bi-minus-circle me-1"></i> Ocultar Disciplinas Aprovadas`;
+            } else {
+                tbodyAprovadas.style.display = 'none';
+                btn.innerHTML = `<i class="bi bi-plus-circle me-1"></i> Exibir Disciplinas Aprovadas (<span id="countAprovadas">${document.getElementById('countAprovadas').innerText}</span>)`;
+            }
+        }
+
+        // --- FUNÇÃO: Renderiza o gráfico filtrando apenas os bimestres selecionados ---
+        function renderGraficoEvolucaoGeral(disciplinas, bimestresSelecionados) {
+            const labelsMap = { 'b1': '1º Bim', 'b2': '2º Bim', 'b3': '3º Bim', 'b4': '4º Bim' };
+            
+            // Filtra apenas os bimestres que estão com checkbox marcado
+            const labelsFiltradas = bimestresSelecionados.map(b => labelsMap[b]);
+            
+            const mediasBimestrais = bimestresSelecionados.map(b => {
+                const notasValidas = disciplinas.map(d => d[b]).filter(n => n !== null && n !== undefined);
+                return notasValidas.length > 0 ? (notasValidas.reduce((a, b) => a + b, 0) / notasValidas.length) : null;
+            });
+
+            const coresPontosLinhas = mediasBimestrais.map(m => {
+                if (m === null) return '#000000';
+                if (m < 4.0) return '#dc3545';
+                if (m < 6.0) return '#fd7e14';
+                return '#198754';
+            });
+
+            const ctx = document.getElementById('chartEvolucaoGeral').getContext('2d');
+            if (chartEvolucaoGeralInstance) chartEvolucaoGeralInstance.destroy();
+
+            chartEvolucaoGeralInstance = new Chart(ctx, {
+                data: {
+                    labels: labelsFiltradas, // Eixo X dinâmico baseado nos checkboxes
+                    datasets: [
+                        {
+                            type: 'line',
+                            label: 'Evolução (Média)',
+                            data: mediasBimestrais,
+                            borderColor: '#fd7e14',
+                            pointBackgroundColor: coresPontosLinhas,
+                            pointBorderColor: coresPontosLinhas,
+                            pointRadius: 6,
+                            borderWidth: 3,
+                            fill: false,
+                            tension: 0.2,
+                            spanGaps: true
+                        },
+                        {
+                            type: 'bar',
+                            label: 'Média Global',
+                            data: mediasBimestrais,
+                            backgroundColor: '#ffe58f',
+                            borderColor: '#ffd591',
+                            borderWidth: 1,
+                            barPercentage: 0.5
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        y: { min: 0, max: 10 }
+                    }
+                }
+            });
+        }
+
+        function renderListaAcoesNapne(acoes) {
+            const ul = document.getElementById('listaAcoesNapne');
+            ul.innerHTML = '';
+            if (!acoes || acoes.length === 0) {
+                ul.innerHTML = '<li class="list-group-item text-muted small p-1 border-0">Nenhuma ação registrada.</li>';
+                return;
+            }
+            acoes.forEach((acao) => {
+                ul.innerHTML += `<li class="list-group-item small p-1 border-0"><i class="bi bi-check2-square text-success me-1"></i>${esc(acao)}</li>`;
+            });
+        }
+
+        function salvarAcaoNapne() {
+            const index = document.getElementById('selectAluno').value;
+            const input = document.getElementById('inputNovaAcaoNapne');
+            const textoAcao = input.value.trim();
+            if (!textoAcao) return;
+
+            const dataAtual = new Date().toLocaleDateString('pt-BR');
+            const acaoFormatada = `${dataAtual}: ${textoAcao}`;
+
+            if (!bancoAlunos[index].acoesNapne) bancoAlunos[index].acoesNapne = [];
+            bancoAlunos[index].acoesNapne.push(acaoFormatada);
+
+            renderListaAcoesNapne(bancoAlunos[index].acoesNapne);
+            input.value = '';
+            persistirAlteracoes();
+        }
+
+        function salvarNotasNapne() {
+            const index = document.getElementById('selectAluno').value;
+            const valor = document.getElementById('txtNotasNapne').value;
+            if (valor === (bancoAlunos[index].pneInfo || '')) return;
+            bancoAlunos[index].pneInfo = valor;
+            persistirAlteracoes();
+        }
+
+        function salvarDeliberacaoConselho() {
+            const index = document.getElementById('selectAluno').value;
+            const valor = document.getElementById('txtDeliberacaoConselho').value;
+            if (valor === (bancoAlunos[index].deliberacao || '')) return;
+            bancoAlunos[index].deliberacao = valor;
+            persistirAlteracoes();
+        }
+
+        function toggleTelaCheia() {
+            if (document.fullscreenElement) document.exitFullscreen();
+            else document.documentElement.requestFullscreen();
+        }
+
+        document.getElementById('formUploadPdf').addEventListener('submit', processarPdfs);
+        window.onload = carregarDadosServidor;
+    </script>
+</body>
+</html>

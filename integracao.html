@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#0d6efd">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <link rel="manifest" href="/manifest.webmanifest">
+    <title>Conselho de Classe IFSP - Integração PDF</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body { background-color: #f4f6f9; font-family: 'Segoe UI', system-ui, sans-serif; font-size: 0.9rem; position: relative; }
+        .card-custom { border: none; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.04); background: white; }
+        .napne-box { background-color: #fff8e1; border-left: 4px solid #ffa000; }
+        .table-sm td, .table-sm th { vertical-align: middle; padding: 0.55rem 0.5rem; cursor: pointer; }
+        .linha-selecionada { background-color: #e7f1ff !important; }
+        .nota-vermelha { color: #dc3545; font-weight: bold; }
+        .nota-laranja { color: #fd7e14; font-weight: bold; }
+        .nota-verde { color: #198754; font-weight: bold; }
+        .nav-btn-side { position: fixed; top: 0; bottom: 0; width: 32px; background-color: rgba(33,37,41,0.08); color: #495057; border: none; display: flex; align-items: center; justify-content: center; font-size: 1.4rem; cursor: pointer; transition: all .2s; z-index: 1000; }
+        .nav-btn-side:hover { background-color: rgba(13,110,253,0.85); color: white; width: 38px; }
+        .nav-btn-left { left: 0; border-top-right-radius: 8px; border-bottom-right-radius: 8px; }
+        .nav-btn-right { right: 0; border-top-left-radius: 8px; border-bottom-left-radius: 8px; }
+        .container-wrapper { margin-left: 28px; margin-right: 28px; }
+        .foto-aluno { width: 68px; height: 92px; object-fit: cover; border-radius: 8px; border: 2px solid #dee2e6; background: #f1f3f5; flex-shrink: 0; }
+        .foto-aluno-vazia { display: flex; align-items: center; justify-content: center; color: #adb5bd; font-size: 2.4rem; }
+    </style>
+</head>
+<body class="p-3">
+    <button class="nav-btn-side nav-btn-left" onclick="navegarAluno(-1)" title="Aluno Anterior"><i class="bi bi-chevron-left"></i></button>
+    <button class="nav-btn-side nav-btn-right" onclick="navegarAluno(1)" title="Próximo Aluno"><i class="bi bi-chevron-right"></i></button>
+
+    <div class="container-wrapper">
+        <div class="card card-custom p-3 mb-3">
+            <div class="d-flex flex-wrap align-items-center justify-content-between gap-2">
+                <div>
+                    <h6 class="fw-bold text-secondary mb-1"><i class="bi bi-file-earmark-pdf me-1"></i>Atualizar dados dos boletins</h6>
+                    <small class="text-muted">Envie um ou mais PDFs de boletins. A turma/sala é lida do próprio PDF. O PDF de apontamentos NAPNE é opcional.</small>
+                </div>
+                <form id="formUploadPdf" class="d-flex flex-wrap align-items-center gap-2">
+                    <input class="form-control form-control-sm" style="width: 230px;" type="file" id="inputPdfBoletins" name="pdfs" accept="application/pdf,.pdf" multiple required>
+                    <input class="form-control form-control-sm" style="width: 230px;" type="file" id="inputPdfNapne" name="napne" accept="application/pdf,.pdf" title="PDF do NAPNE (opcional)">
+                    <label class="small text-nowrap mb-0" title="Se marcado, substitui os alunos atuais em vez de mesclar"><input type="checkbox" id="checkSubstituirDados"> Substituir dados</label>
+                    <button class="btn btn-sm btn-primary fw-semibold" type="submit" id="btnProcessarPdf"><i class="bi bi-gear me-1"></i>Processar PDFs</button>
+                    <a class="btn btn-sm btn-outline-secondary" href="/">Dashboard 12</a>
+                    <a class="btn btn-sm btn-outline-secondary" href="/dashboards">Todos os dashboards</a>
+                    <button class="btn btn-sm btn-outline-dark" type="button" onclick="toggleTelaCheia()"><i class="bi bi-fullscreen me-1"></i>Tela cheia</button>
+                </form>
+            </div>
+            <div class="small mt-2 text-muted" id="txtStatusUpload">Nenhum PDF processado nesta sessão.</div>
+            <div class="small mt-1" id="txtStatusArquivo">Carregando dados do servidor...</div>
+            <div class="small mt-1" id="txtStatusSalvamento">Alterações serão salvas em dados_alunos.json.</div>
+        </div>
+
+        <div class="card card-custom p-3 mb-3">
+            <div class="row align-items-center g-3">
+                <div class="col-md-4">
+                    <label for="selectAluno" class="form-label fw-bold text-secondary mb-1"><i class="bi bi-person-bounding-box me-1"></i> Selecionar Aluno (Conselho de Classe):</label>
+                    <select id="selectAluno" class="form-select form-select-sm fw-bold" onchange="carregarDadosAluno()"></select>
+                </div>
+                <div class="col-md-5">
+                    <div class="d-flex align-items-center gap-3">
+                        <img id="imgFotoAluno" class="foto-aluno d-none" alt="Foto do aluno">
+                        <div id="fotoPlaceholder" class="foto-aluno foto-aluno-vazia" title="Sem foto no JSON"><i class="bi bi-person-fill"></i></div>
+                        <div>
+                            <h5 class="fw-bold mb-0 text-dark" id="txtNomeAluno">---</h5>
+                            <small class="text-muted">Prontuário: <span id="txtProntuario" class="fw-semibold">---</span> | Curso: <span id="txtCurso" class="fw-semibold">---</span> | Turma: <span id="txtTurma" class="fw-semibold">---</span></small>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3 text-end">
+                    <button class="btn btn-sm btn-outline-primary fw-semibold mb-1" onclick="carregarDadosServidor()" title="Recarregar dados salvos no servidor"><i class="bi bi-arrow-clockwise me-1"></i> Atualizar dados</button>
+                    <span id="badgeStatusGeral" class="badge p-2 fs-6">---</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="row g-3 mb-3">
+            <div class="col-md-3"><div class="card card-custom p-2 text-center border-start border-4 border-primary"><small class="text-muted fw-bold">MÉDIA GERAL</small><h3 class="fw-bold mb-0" id="kpiMediaGeral">0.0</h3></div></div>
+            <div class="col-md-3"><div class="card card-custom p-2 text-center border-start border-4 border-info"><small class="text-muted fw-bold">FREQUÊNCIA GLOBAL</small><h3 class="fw-bold mb-0" id="kpiFrequencia">0%</h3></div></div>
+            <div class="col-md-3"><div class="card card-custom p-2 text-center border-start border-4 border-danger"><small class="text-muted fw-bold">DISCIPLINAS RETIDAS (&lt; 6.0)</small><h3 class="fw-bold mb-0 text-danger" id="kpiRetencoes">0</h3></div></div>
+            <div class="col-md-3"><div class="card card-custom p-2 text-center border-start border-4 border-warning"><small class="text-muted fw-bold">ACOMPANHAMENTO NAPNE</small><h3 class="fw-bold mb-0 text-warning" id="kpiNapneStatus">NÃO</h3></div></div>
+        </div>
+
+        <div class="row g-3 mb-3">
+            <div class="col-md-7">
+                <div class="card card-custom p-3 h-100">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <h6 class="fw-bold text-secondary mb-0"><i class="bi bi-sort-numeric-down me-1"></i> Desempenho por Disciplina</h6>
+                        <div class="d-flex align-items-center gap-2">
+                            <label class="small text-muted fw-semibold">Ordenar por:</label>
+                            <select id="selectOrdenacao" class="form-select form-select-sm" style="width:auto" onchange="carregarDadosAluno()">
+                                <option value="nota">Menor Nota Primeiro</option>
+                                <option value="freq">Menor Frequência Primeiro</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table table-sm table-hover align-middle mb-0">
+                            <thead class="table-light"><tr><th>Disciplina (Clique para ver gráficos)</th><th class="text-center">B1</th><th class="text-center">B2</th><th class="text-center">B3</th><th class="text-center">B4</th><th class="text-center">Média</th><th class="text-center">Falta(s)</th></tr></thead>
+                            <tbody id="tbodyDisciplinas"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-5">
+                <div class="card card-custom p-3 h-100">
+                    <h6 class="fw-bold text-secondary mb-2" id="txtTituloDisciplina">Selecione uma disciplina na tabela</h6>
+                    <div class="row g-2">
+                        <div class="col-md-6 text-center"><small class="fw-bold text-muted">Frequência da Matéria</small><div style="height:160px"><canvas id="chartRoscaFreq"></canvas></div></div>
+                        <div class="col-md-6 text-center"><small class="fw-bold text-muted">Notas por Bimestre</small><div style="height:160px"><canvas id="chartBarrasNota"></canvas></div></div>
+                    </div>
+                    <hr>
+                    <h6 class="fw-bold text-secondary mb-2">Evolução Média Geral (Turma/Bimestres)</h6>
+                    <div style="height:140px"><canvas id="chartEvolucaoGeral"></canvas></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card card-custom p-3 napne-box">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+                <h6 class="fw-bold text-dark mb-0"><i class="bi bi-journal-medical me-1 text-warning"></i> Parecer do NAPNE &amp; Observações Pedagógicas</h6>
+                <span class="badge bg-warning text-dark" id="badgePNE">Atendimento Especializado</span>
+            </div>
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <label class="fw-bold text-muted small">Informações NAPNE (SUAP):</label>
+                    <textarea class="form-control form-control-sm mb-2" id="txtNotasNapne" rows="3" onchange="salvarNotasNapne()"></textarea>
+                    <div class="input-group input-group-sm mb-2">
+                        <input type="text" id="inputNovaAcaoNapne" class="form-control" placeholder="Adicionar nova ação pedagógica/NAPNE...">
+                        <button class="btn btn-warning fw-bold text-dark" onclick="salvarAcaoNapne()"><i class="bi bi-plus-circle me-1"></i> Salvar e Adicionar Ação</button>
+                    </div>
+                    <small class="fw-bold text-muted">Histórico de Ações Registradas:</small>
+                    <ul class="list-group list-group-flush bg-white rounded border p-1" id="listaAcoesNapne" style="max-height:110px;overflow-y:auto"></ul>
+                </div>
+                <div class="col-md-6">
+                    <label class="fw-bold text-muted small">Encaminhamento / Deliberação do Conselho de Classe:</label>
+                    <textarea class="form-control form-control-sm mb-2" id="txtDeliberacaoConselho" rows="4" placeholder="Digite as deliberações do conselho..." onchange="salvarDeliberacaoConselho()"></textarea>
+                    <div class="text-end"><button class="btn btn-sm btn-primary fw-bold" onclick="salvarDeliberacaoConselho()"><i class="bi bi-save me-1"></i> Salvar Deliberação</button></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let bancoAlunos = [];
+        let chartRoscaInstance = null, chartBarrasInstance = null, chartEvolucaoGeralInstance = null;
+        let disciplinaSelecionadaIndex = 0, disciplinasAtuais = [];
+        let nomeArquivo = 'dados_alunos.json', filaSalvamento = Promise.resolve();
+        const CHAVE_STORAGE = 'versao_python_dados';
+        function cacheLocalSalvar(){ try{ localStorage.setItem(CHAVE_STORAGE, JSON.stringify({arquivo:nomeArquivo, alunos:bancoAlunos})); }catch(e){} }
+        function cacheLocalCarregar(){ try{ const raw=localStorage.getItem(CHAVE_STORAGE); if(!raw) return null; const d=JSON.parse(raw); return Array.isArray(d.alunos)?d:(Array.isArray(d)?{alunos:d}:null); }catch(e){ return null; } }
+
+        function esc(t){ return String(t ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+        function paraNota(v){ if(v===null||v===undefined||v==='') return null; const n=typeof v==='string'?parseFloat(v.replace(',','.')):Number(v); return Number.isFinite(n)?n:null; }
+        function fotoValida(f){ return typeof f==='string' && /^data:image\/(jpeg|jpg|png|gif|webp);base64,[A-Za-z0-9+\/=]+$/.test(f) ? f : null; }
+        function normalizarAluno(a,i){ const disc=Array.isArray(a.disciplinas)?a.disciplinas:[]; return {...a, num_chamada:a.num_chamada ?? (i+1), prontuario:a.prontuario ?? '---', nome:a.nome ?? 'Aluno sem nome', curso:a.curso ?? '---', turma:a.turma ?? '---', frequencia:paraNota(a.frequencia), napne:!!a.napne, pneInfo:a.pneInfo ?? '', acoesNapne:Array.isArray(a.acoesNapne)?a.acoesNapne.map(String):[], deliberacao:a.deliberacao ?? '', foto:fotoValida(a.foto), disciplinas:disc.map(d=>({...d, nome:d.nome ?? 'Disciplina', b1:paraNota(d.b1), b2:paraNota(d.b2), b3:paraNota(d.b3), b4:paraNota(d.b4), faltas:paraNota(d.faltas) ?? 0}))}; }
+        function setStatusSalvamento(tipo,texto){ const el=document.getElementById('txtStatusSalvamento'); el.textContent=texto; el.className='small mt-1 '+({ok:'text-success',erro:'text-danger',aviso:'text-warning-emphasis'}[tipo]||'text-muted'); }
+        function processarJson(dados,nome){ if(!Array.isArray(dados)) dados=Array.isArray(dados&&dados.alunos)?dados.alunos:[dados]; if(!dados.length) throw new Error('O JSON não contém nenhum aluno.'); bancoAlunos=dados.map(normalizarAluno).sort((a,b)=>(a.num_chamada??0)-(b.num_chamada??0)); nomeArquivo=nome||'dados_alunos.json'; cacheLocalSalvar(); document.getElementById('txtStatusArquivo').textContent=`${nomeArquivo} — ${bancoAlunos.length} aluno(s)`; inicializar(); }
+        async function carregarDadosServidor(){ const status=document.getElementById('txtStatusArquivo'); status.textContent='Carregando dados do servidor...'; try{ const r=await fetch('/api/dados'); const d=await r.json(); if(!r.ok) throw new Error(d.erro||'Falha ao carregar dados.'); processarJson(d.alunos||d,d.arquivo||nomeArquivo); setStatusSalvamento('ok','Dados carregados do servidor.'); }catch(e){ const cache=cacheLocalCarregar(); if(cache&&cache.alunos&&cache.alunos.length){ processarJson(cache.alunos, cache.arquivo||nomeArquivo); status.textContent+=' (cache local do navegador)'; setStatusSalvamento('aviso','Servidor indisponível — dados do cache local.'); } else if(window.location.protocol==='file:'){ status.textContent='Abra pelo servidor (ex.: /integracao).'; setStatusSalvamento('erro','Abra pelo servidor, não como arquivo.'); } else { status.textContent='Erro ao carregar dados: '+e.message; setStatusSalvamento('erro',e.message); } } }
+        function persistirAlteracoes(){ setStatusSalvamento('aviso','Salvando alterações no servidor...'); filaSalvamento=filaSalvamento.then(async()=>{ try{ const r=await fetch('/api/dados',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({alunos:bancoAlunos})}); const d=await r.json(); if(!r.ok) throw new Error(d.erro||'Falha ao salvar.'); cacheLocalSalvar(); setStatusSalvamento('ok','Salvo no servidor às '+new Date().toLocaleTimeString('pt-BR')+'.'); }catch(e){ setStatusSalvamento('aviso','Salvo apenas no cache local: '+e.message); } }); }
+        async function processarPdfs(ev){ ev.preventDefault(); const status=document.getElementById('txtStatusUpload'), botao=document.getElementById('btnProcessarPdf'), ib=document.getElementById('inputPdfBoletins'), in_=document.getElementById('inputPdfNapne'); if(!ib.files.length){ status.textContent='Selecione ao menos um PDF de boletim.'; return; } const fd=new FormData(); Array.from(ib.files).forEach(f=>fd.append('pdfs',f)); if(in_.files.length) fd.append('napne',in_.files[0]); if(document.getElementById('checkSubstituirDados').checked) fd.append('substituir','1'); botao.disabled=true; status.textContent='Processando PDFs no servidor...'; try{ const r=await fetch('/api/processar-pdfs',{method:'POST',body:fd}); const d=await r.json(); if(!r.ok) throw new Error(d.erro||'Falha ao processar PDFs.'); processarJson(d.alunos,d.arquivo||nomeArquivo); status.textContent=`Processado: ${d.alunos.length} aluno(s) extraídos e salvos em ${d.arquivo}.`; }catch(e){ status.textContent='Erro ao processar PDFs: '+e.message; } finally{ botao.disabled=false; } }
+        function toggleTelaCheia(){ if(document.fullscreenElement) document.exitFullscreen(); else document.documentElement.requestFullscreen(); }
+        function navegarAluno(d){ const s=document.getElementById('selectAluno'); const t=s.options.length; if(!t) return; s.value=(parseInt(s.value)+d+t)%t; carregarDadosAluno(); }
+        function obterClasseNota(v){ if(v===null||v===undefined||isNaN(v)) return ''; if(v<4.0) return 'nota-vermelha'; if(v<6.0) return 'nota-laranja'; return 'nota-verde'; }
+        function formatarNota(v){ return (v!==null&&v!==undefined&&!isNaN(v))?v.toFixed(1):'-'; }
+        function inicializar(){ const s=document.getElementById('selectAluno'); s.innerHTML=''; if(!bancoAlunos.length){ s.innerHTML='<option value="">Nenhum aluno cadastrado</option>'; return; } bancoAlunos.forEach((a,i)=>{ const o=document.createElement('option'); o.value=i; const c=a.num_chamada!=null?String(a.num_chamada).padStart(2,'0')+' - ':''; o.textContent=`${c}${a.nome} (${a.prontuario})`; s.appendChild(o); }); carregarDadosAluno(); }
+        function carregarDadosAluno(){ const s=document.getElementById('selectAluno'); if(!s.value&&s.value!=='0') return; const a=bancoAlunos[s.value]; if(!a) return; document.getElementById('txtNomeAluno').innerText=a.nome; document.getElementById('txtProntuario').innerText=a.prontuario; document.getElementById('txtCurso').innerText=a.curso; document.getElementById('txtTurma').innerText=a.turma; const tipo=document.getElementById('selectOrdenacao').value; disciplinasAtuais=(a.disciplinas||[]).map(d=>{ const ns=[d.b1,d.b2,d.b3,d.b4].filter(n=>n!==null&&n!==undefined&&!isNaN(n)); const media=ns.length?ns.reduce((x,y)=>x+y,0)/ns.length:null; return {...d,media,freqMat:(typeof d.freq==='number'&&!isNaN(d.freq))?d.freq:(d.faltas?Math.max(0,100-d.faltas):100)}; }).sort((x,y)=> tipo==='freq' ? x.freqMat-y.freqMat : (x.media===null?1:y.media===null?-1:x.media-y.media)); const medias=disciplinasAtuais.map(d=>d.media).filter(m=>m!==null); const mediaGeral=medias.length?medias.reduce((x,y)=>x+y,0)/medias.length:0; const ret=disciplinasAtuais.filter(d=>d.media!==null&&d.media<6.0).length; const freq=a.frequencia??0, freqBaixa=a.frequencia!==null&&a.frequencia<75; document.getElementById('kpiMediaGeral').innerText=mediaGeral.toFixed(1); document.getElementById('kpiMediaGeral').className=`fw-bold mb-0 ${obterClasseNota(mediaGeral)}`; document.getElementById('kpiFrequencia').innerText=(a.frequencia===null?'-':freq.toFixed(1)+'%'); document.getElementById('kpiFrequencia').className=`fw-bold mb-0 ${freqBaixa?'text-danger':'text-info'}`; document.getElementById('kpiRetencoes').innerText=ret; document.getElementById('kpiNapneStatus').innerText=a.napne?'SIM':'NÃO'; const badge=document.getElementById('badgeStatusGeral'); if(ret>3||freqBaixa){ badge.innerText='SITUAÇÃO CRÍTICA'; badge.className='badge bg-danger p-2 fs-6'; } else if(ret>0){ badge.innerText='EM ATENÇÃO'; badge.className='badge bg-warning text-dark p-2 fs-6'; } else { badge.innerText='PROMOVIDO / SATISFATÓRIO'; badge.className='badge bg-success p-2 fs-6'; } const img=document.getElementById('imgFotoAluno'), ph=document.getElementById('fotoPlaceholder'), ok=fotoValida(a.foto); if(ok) img.src=ok; else img.removeAttribute('src'); img.alt='Foto de '+a.nome; img.classList.toggle('d-none',!ok); ph.classList.toggle('d-none',!!ok); document.getElementById('txtNotasNapne').value=a.pneInfo||''; document.getElementById('txtDeliberacaoConselho').value=a.deliberacao||''; document.getElementById('inputNovaAcaoNapne').value=''; renderListaAcoesNapne(a.acoesNapne); document.getElementById('badgePNE').innerText=a.napne?'Atendimento Especializado':'Sem registro NAPNE'; renderTabelaDisciplinas(disciplinasAtuais); renderGraficoEvolucaoGeral(disciplinasAtuais); if(disciplinasAtuais.length) selecionarDisciplina(0); }
+        function renderTabelaDisciplinas(ds){ const tb=document.getElementById('tbodyDisciplinas'); tb.innerHTML=''; ds.forEach((d,i)=>{ tb.innerHTML+=`<tr id="tr_disp_${i}" onclick="selecionarDisciplina(${i})"><td class="fw-semibold">${esc(d.nome)}</td><td class="text-center ${obterClasseNota(d.b1)}">${formatarNota(d.b1)}</td><td class="text-center ${obterClasseNota(d.b2)}">${formatarNota(d.b2)}</td><td class="text-center ${obterClasseNota(d.b3)}">${formatarNota(d.b3)}</td><td class="text-center ${obterClasseNota(d.b4)}">${formatarNota(d.b4)}</td><td class="text-center ${obterClasseNota(d.media)}">${formatarNota(d.media)}</td><td class="text-center">${d.faltas||0}</td></tr>`; }); }
+        function selecionarDisciplina(idx){ disciplinaSelecionadaIndex=idx; document.querySelectorAll('#tbodyDisciplinas tr').forEach(tr=>tr.classList.remove('linha-selecionada')); const row=document.getElementById(`tr_disp_${idx}`); if(row) row.classList.add('linha-selecionada'); const d=disciplinasAtuais[idx]; if(!d) return; document.getElementById('txtTituloDisciplina').innerText=`Matéria: ${d.nome}`; const freqMat=d.freqMat??100; const ctxR=document.getElementById('chartRoscaFreq').getContext('2d'); if(chartRoscaInstance) chartRoscaInstance.destroy(); chartRoscaInstance=new Chart(ctxR,{type:'doughnut',data:{labels:['Presença','Faltas'],datasets:[{data:[freqMat,Math.max(0,100-freqMat)],backgroundColor:['#198754','#dc3545']}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}}}}); const ctxB=document.getElementById('chartBarrasNota').getContext('2d'); if(chartBarrasInstance) chartBarrasInstance.destroy(); chartBarrasInstance=new Chart(ctxB,{type:'bar',data:{labels:['B1','B2','B3','B4'],datasets:[{label:'Notas',data:[d.b1,d.b2,d.b3,d.b4],backgroundColor:'#0d6efd'}]},options:{responsive:true,maintainAspectRatio:false,scales:{y:{min:0,max:10}},plugins:{legend:{display:false}}}}); }
+        function renderGraficoEvolucaoGeral(ds){ const bs=['b1','b2','b3','b4']; const medias=bs.map(b=>{ const ns=ds.map(d=>d[b]).filter(n=>n!==null&&n!==undefined&&!isNaN(n)); return ns.length?ns.reduce((x,y)=>x+y,0)/ns.length:null; }); const ctx=document.getElementById('chartEvolucaoGeral').getContext('2d'); if(chartEvolucaoGeralInstance) chartEvolucaoGeralInstance.destroy(); chartEvolucaoGeralInstance=new Chart(ctx,{data:{labels:['1º Bim','2º Bim','3º Bim','4º Bim'],datasets:[{type:'line',label:'Evolução',data:medias,borderColor:'#fd7e14',borderWidth:2,fill:false,spanGaps:true},{type:'bar',label:'Média',data:medias,backgroundColor:'#ffe58f'}]},options:{responsive:true,maintainAspectRatio:false,scales:{y:{min:0,max:10}},plugins:{legend:{display:false}}}}); }
+        function renderListaAcoesNapne(acoes){ const ul=document.getElementById('listaAcoesNapne'); ul.innerHTML=''; if(!acoes||!acoes.length){ ul.innerHTML='<li class="list-group-item text-muted small p-1 border-0">Nenhuma ação registrada.</li>'; return; } acoes.forEach(a=>{ ul.innerHTML+=`<li class="list-group-item small p-1 border-0"><i class="bi bi-check2-square text-success me-1"></i>${esc(a)}</li>`; }); }
+        function salvarNotasNapne(){ const i=document.getElementById('selectAluno').value, v=document.getElementById('txtNotasNapne').value; if(v===(bancoAlunos[i].pneInfo||'')) return; bancoAlunos[i].pneInfo=v; persistirAlteracoes(); }
+        function salvarAcaoNapne(){ const i=document.getElementById('selectAluno').value, inp=document.getElementById('inputNovaAcaoNapne'), txt=inp.value.trim(); if(!txt) return; const data=new Date().toLocaleDateString('pt-BR'); if(!bancoAlunos[i].acoesNapne) bancoAlunos[i].acoesNapne=[]; bancoAlunos[i].acoesNapne.push(`${data}: ${txt}`); renderListaAcoesNapne(bancoAlunos[i].acoesNapne); inp.value=''; persistirAlteracoes(); }
+        function salvarDeliberacaoConselho(){ const i=document.getElementById('selectAluno').value, v=document.getElementById('txtDeliberacaoConselho').value; if(v===(bancoAlunos[i].deliberacao||'')) return; bancoAlunos[i].deliberacao=v; persistirAlteracoes(); }
+        document.getElementById('formUploadPdf').addEventListener('submit', processarPdfs);
+        window.onload = carregarDadosServidor;
+    </script>
+</body>
+</html>

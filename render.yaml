@@ -1,0 +1,10 @@
+services:
+  - type: web
+    name: versao-python-conselho
+    runtime: docker
+    plan: free
+    dockerfilePath: ./Dockerfile
+    healthCheckPath: /api/dados
+    envVars:
+      - key: PORT
+        value: "10000"

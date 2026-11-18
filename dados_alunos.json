@@ -1,0 +1,410 @@
+[
+  {
+    "num_chamada": 1,
+    "prontuario": "BT3043819",
+    "nome": "Beatriz Amorim Fragozo",
+    "curso": "TÉCNICO EM REDES DE COMPUTADORES INTEGRADO AO ENSINO MÉDIOCoef. Rendimento:9,58 Frequência: 100,0%Chave de acesso:b7cf1 Período Letivo:2026/1",
+    "turma": "20261.3.BTV.INT.RED.2014.1I",
+    "frequencia": 100.0,
+    "napne": true,
+    "pneInfo": "Laudo NAPNE: Necessidades Especiais: Sim (Tipo A) | Transtorno: Sim (Tipo B) | Superdotação: Sim (C)",
+    "deliberacao": "",
+    "foto": "data:image/jpeg;base64,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",
+    "disciplinas": [
+      {
+        "nome": "INT.11293 (BTVGCLI) - GESTÃO DE CONTEÚDO PARA WEB INTEGRADO À LÍNGUA INGLESA",
+        "b1": 10.0,
+        "b2": null,
+        "b3": null,
+        "b4": null,
+        "nucleo": "Técnico",
+        "faltas": 0,
+        "freq": 100.0
+      },
+      {
+        "nome": "INT.11287 (BTVPOR3) - LÍNGUA PORTUGUESA 3",
+        "b1": 10.0,
+        "b2": null,
+        "b3": null,
+        "b4": null,
+        "nucleo": "Comum",
+        "faltas": 0,
+        "freq": 100.0
+      },
+      {
+        "nome": "INT.11290 (BTVART3) - ARTE 3",
+        "b1": 10.0,
+        "b2": null,
+        "b3": null,
+        "b4": null,
+        "nucleo": "Comum",
+        "faltas": 0,
+        "freq": 100.0
+      },
+      {
+        "nome": "INT.12416 (BTVEFI3) - EDUCAÇÃO FÍSICA 3",
+        "b1": 9.0,
+        "b2": null,
+        "b3": null,
+        "b4": null,
+        "nucleo": "Comum",
+        "faltas": 0,
+        "freq": 100.0
+      },
+      {
+        "nome": "INT.12418 (BTVBIO3) - BIOLOGIA 3",
+        "b1": 8.5,
+        "b2": null,
+        "b3": null,
+        "b4": null,
+        "nucleo": "Comum",
+        "faltas": 0,
+        "freq": 100.0
+      },
+      {
+        "nome": "INT.12419 (BTVFIS3) - FÍSICA 3",
+        "b1": 10.0,
+        "b2": null,
+        "b3": null,
+        "b4": null,
+        "nucleo": "Comum",
+        "faltas": 0,
+        "freq": 100.0
+      },
+      {
+        "nome": "INT.12421 (BTVHIS3) - HISTÓRIA 3",
+        "b1": 7.9,
+        "b2": null,
+        "b3": null,
+        "b4": null,
+        "nucleo": "Comum",
+        "faltas": 0,
+        "freq": 100.0
+      },
+      {
+        "nome": "INT.12422 (BTVGEO3) - GEOGRAFIA 3",
+        "b1": 10.0,
+        "b2": null,
+        "b3": null,
+        "b4": null,
+        "nucleo": "Comum",
+        "faltas": 0,
+        "freq": 100.0
+      },
+      {
+        "nome": "INT.11292 (BTVFIL3) - FILOSOFIA 3",
+        "b1": 10.0,
+        "b2": null,
+        "b3": null,
+        "b4": null,
+        "nucleo": "Comum",
+        "faltas": 0,
+        "freq": 100.0
+      },
+      {
+        "nome": "INT.12423 (BTVSOC2) - SOCIOLOGIA 2",
+        "b1": 7.5,
+        "b2": null,
+        "b3": null,
+        "b4": null,
+        "nucleo": "Comum",
+        "faltas": 0,
+        "freq": 100.0
+      },
+      {
+        "nome": "INT.11294 (BTVPRIN) - PROJETO INTEGRADOR (TURMA A)",
+        "b1": 9.0,
+        "b2": null,
+        "b3": null,
+        "b4": null,
+        "nucleo": "Técnico",
+        "faltas": 0,
+        "freq": 100.0
+      },
+      {
+        "nome": "INT.11295 (BTVRSFI) - REDES SEM FIO",
+        "b1": 10.0,
+        "b2": null,
+        "b3": null,
+        "b4": null,
+        "nucleo": "Técnico",
+        "faltas": 0,
+        "freq": 100.0
+      },
+      {
+        "nome": "INT.11296 (BTVPSCO) - PROGRAMAÇÃO DE SISTEMAS DE COMPUTADORES",
+        "b1": 10.0,
+        "b2": null,
+        "b3": null,
+        "b4": null,
+        "nucleo": "Técnico",
+        "faltas": 0,
+        "freq": 100.0
+      },
+      {
+        "nome": "INT.11297 (BTVASRE) - ADMINISTRAÇÃO DE SERVIÇOS DE REDES",
+        "b1": 10.0,
+        "b2": null,
+        "b3": null,
+        "b4": null,
+        "nucleo": "Técnico",
+        "faltas": 0,
+        "freq": 100.0
+      },
+      {
+        "nome": "INT.11298 (BTVSDRE) - SEGURANÇA DE REDES",
+        "b1": 10.0,
+        "b2": null,
+        "b3": null,
+        "b4": null,
+        "nucleo": "Técnico",
+        "faltas": 0,
+        "freq": 100.0
+      },
+      {
+        "nome": "INT.11299 (BTVCNVI) - COMPUTAÇÃO EM NUVEM E VIRTUALIZAÇÃO",
+        "b1": 9.4,
+        "b2": null,
+        "b3": null,
+        "b4": null,
+        "nucleo": "Técnico",
+        "faltas": 0,
+        "freq": 100.0
+      },
+      {
+        "nome": "INT.11302 (BTVESP3) - LÍNGUA ESPANHOLA 3",
+        "b1": 10.0,
+        "b2": null,
+        "b3": null,
+        "b4": null,
+        "nucleo": "Comum",
+        "faltas": 0,
+        "freq": 100.0
+      },
+      {
+        "nome": "INT.12420 (BTVQUI3) - QUÍMICA 3",
+        "b1": 9.5,
+        "b2": 10.0,
+        "b3": null,
+        "b4": null,
+        "nucleo": "Comum",
+        "faltas": 0,
+        "freq": 100.0
+      },
+      {
+        "nome": "INT.12417 (BTVMAT3) - MATEMÁTICA 3",
+        "b1": 10.0,
+        "b2": null,
+        "b3": 0.0,
+        "b4": 0.0,
+        "nucleo": "Comum",
+        "faltas": 0,
+        "freq": 100.0
+      }
+    ]
+  },
+  {
+    "num_chamada": 2,
+    "prontuario": "BT3044548",
+    "nome": "Beatriz Costa Chiara",
+    "curso": "TÉCNICO EM REDES DE COMPUTADORES INTEGRADO AO ENSINO MÉDIOCoef. Rendimento:9,38 Frequência: 98,61%Chave de acesso:b8ba1 Período Letivo:2026/1",
+    "turma": "20261.3.BTV.INT.RED.2014.1I",
+    "frequencia": 98.61,
+    "napne": false,
+    "pneInfo": "Nenhum registro de PNE/Transtorno/Superdotação.",
+    "deliberacao": "",
+    "foto": "data:image/jpeg;base64,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",
+    "disciplinas": [
+      {
+        "nome": "INT.11293 (BTVGCLI) - GESTÃO DE CONTEÚDO PARA WEB INTEGRADO À LÍNGUA INGLESA",
+        "b1": 10.0,
+        "b2": null,
+        "b3": null,
+        "b4": null,
+        "nucleo": "Técnico",
+        "faltas": 0,
+        "freq": 100.0
+      },
+      {
+        "nome": "INT.11287 (BTVPOR3) - LÍNGUA PORTUGUESA 3",
+        "b1": 10.0,
+        "b2": null,
+        "b3": null,
+        "b4": null,
+        "nucleo": "Comum",
+        "faltas": 0,
+        "freq": 100.0
+      },
+      {
+        "nome": "INT.11290 (BTVART3) - ARTE 3",
+        "b1": 10.0,
+        "b2": null,
+        "b3": null,
+        "b4": null,
+        "nucleo": "Comum",
+        "faltas": 0,
+        "freq": 100.0
+      },
+      {
+        "nome": "INT.12416 (BTVEFI3) - EDUCAÇÃO FÍSICA 3",
+        "b1": 9.0,
+        "b2": null,
+        "b3": null,
+        "b4": null,
+        "nucleo": "Comum",
+        "faltas": 0,
+        "freq": 100.0
+      },
+      {
+        "nome": "INT.12418 (BTVBIO3) - BIOLOGIA 3",
+        "b1": 9.0,
+        "b2": null,
+        "b3": null,
+        "b4": null,
+        "nucleo": "Comum",
+        "faltas": 0,
+        "freq": 100.0
+      },
+      {
+        "nome": "INT.12419 (BTVFIS3) - FÍSICA 3",
+        "b1": 9.4,
+        "b2": null,
+        "b3": null,
+        "b4": null,
+        "nucleo": "Comum",
+        "faltas": 2,
+        "freq": 93.75
+      },
+      {
+        "nome": "INT.12421 (BTVHIS3) - HISTÓRIA 3",
+        "b1": 8.6,
+        "b2": null,
+        "b3": null,
+        "b4": null,
+        "nucleo": "Comum",
+        "faltas": 0,
+        "freq": 100.0
+      },
+      {
+        "nome": "INT.12422 (BTVGEO3) - GEOGRAFIA 3",
+        "b1": 10.0,
+        "b2": null,
+        "b3": null,
+        "b4": null,
+        "nucleo": "Comum",
+        "faltas": 0,
+        "freq": 100.0
+      },
+      {
+        "nome": "INT.11292 (BTVFIL3) - FILOSOFIA 3",
+        "b1": 9.0,
+        "b2": null,
+        "b3": null,
+        "b4": null,
+        "nucleo": "Comum",
+        "faltas": 1,
+        "freq": 94.11
+      },
+      {
+        "nome": "INT.12423 (BTVSOC2) - SOCIOLOGIA 2",
+        "b1": 9.0,
+        "b2": null,
+        "b3": null,
+        "b4": null,
+        "nucleo": "Comum",
+        "faltas": 0,
+        "freq": 100.0
+      },
+      {
+        "nome": "INT.11294 (BTVPRIN) - PROJETO INTEGRADOR (TURMA A)",
+        "b1": 9.0,
+        "b2": null,
+        "b3": null,
+        "b4": null,
+        "nucleo": "Técnico",
+        "faltas": 0,
+        "freq": 100.0
+      },
+      {
+        "nome": "INT.11295 (BTVRSFI) - REDES SEM FIO",
+        "b1": 10.0,
+        "b2": null,
+        "b3": null,
+        "b4": null,
+        "nucleo": "Técnico",
+        "faltas": 0,
+        "freq": 100.0
+      },
+      {
+        "nome": "INT.11296 (BTVPSCO) - PROGRAMAÇÃO DE SISTEMAS DE COMPUTADORES",
+        "b1": 10.0,
+        "b2": null,
+        "b3": null,
+        "b4": null,
+        "nucleo": "Técnico",
+        "faltas": 4,
+        "freq": 88.88
+      },
+      {
+        "nome": "INT.11297 (BTVASRE) - ADMINISTRAÇÃO DE SERVIÇOS DE REDES",
+        "b1": 10.0,
+        "b2": null,
+        "b3": null,
+        "b4": null,
+        "nucleo": "Técnico",
+        "faltas": 0,
+        "freq": 100.0
+      },
+      {
+        "nome": "INT.11298 (BTVSDRE) - SEGURANÇA DE REDES",
+        "b1": 10.0,
+        "b2": null,
+        "b3": null,
+        "b4": null,
+        "nucleo": "Técnico",
+        "faltas": 2,
+        "freq": 93.75
+      },
+      {
+        "nome": "INT.11299 (BTVCNVI) - COMPUTAÇÃO EM NUVEM E VIRTUALIZAÇÃO",
+        "b1": 9.3,
+        "b2": null,
+        "b3": null,
+        "b4": null,
+        "nucleo": "Técnico",
+        "faltas": 0,
+        "freq": 100.0
+      },
+      {
+        "nome": "INT.11302 (BTVESP3) - LÍNGUA ESPANHOLA 3",
+        "b1": 10.0,
+        "b2": null,
+        "b3": null,
+        "b4": null,
+        "nucleo": "Comum",
+        "faltas": 0,
+        "freq": 100.0
+      },
+      {
+        "nome": "INT.12420 (BTVQUI3) - QUÍMICA 3",
+        "b1": 10.0,
+        "b2": 9.5,
+        "b3": null,
+        "b4": null,
+        "nucleo": "Comum",
+        "faltas": 0,
+        "freq": 100.0
+      },
+      {
+        "nome": "INT.12417 (BTVMAT3) - MATEMÁTICA 3",
+        "b1": 9.5,
+        "b2": null,
+        "b3": 0.0,
+        "b4": 0.0,
+        "nucleo": "Comum",
+        "faltas": 0,
+        "freq": 100.0
+      }
+    ]
+  }
+]
